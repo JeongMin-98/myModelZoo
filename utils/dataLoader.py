@@ -5,6 +5,8 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
+from torchvision.datasets import MNIST
+from utils.tools import check_folder
 
 
 class ImageDataset(Dataset):
@@ -46,3 +48,31 @@ def data_transform(img_size):
         transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True),  # [0, 1] -> [-1, 1]
     ]
     return transforms.Compose(transform_list)
+
+
+def mnist_transform():
+    transforms_list = [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5], inplace=True)
+    ]
+    return transforms.Compose(transforms_list)
+
+
+def download_mnist_data():
+    download_path = os.path.join(os.getcwd(), 'dataset', 'mnist')
+    check_folder(download_path)
+
+    train_data = MNIST(
+        root=download_path,
+        train=True,
+        download=True,
+        transform=transforms.ToTensor()
+    )
+    test_data = MNIST(
+        root=download_path,
+        train=False,
+        download=True,
+        transform=transforms.ToTensor()
+    )
+
+    return train_data, test_data

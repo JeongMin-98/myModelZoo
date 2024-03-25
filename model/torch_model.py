@@ -1,9 +1,10 @@
 import torch.utils.data
-
+from torch.nn.functional import one_hot
 from utils.dataLoader import ImageDataset
-from utils.utils import *
+from utils.tools import *
 from network.exampleNet import *
 from torch.utils.tensorboard import SummaryWriter
+
 from torchsummary import summary
 
 
@@ -14,27 +15,15 @@ def run_fn(args):
     model.train_model(device)
 
 
-def run_test_template_arch(args):
-    device = check_device()
-    model = DeepNetwork(args)
-    model.build_model(device)
-
-    test_torch = torch.randn(3, 224, 224).unsqueeze(0).to(device)
-    summary(model.network, (3, 224, 224), device="cuda")
-
-    model.test_for_template_arch(test_torch)
-
-    model.train_model(device)
-
-
 class DeepNetwork():
     def __init__(self, args):
-        # super(DeepNetwork, self).__init__()
-        self.model_name = 'DeepNetwork'
+        super(DeepNetwork, self).__init__()
+        self.model_name = args['model_name']
         self.checkpoint_dir = args['checkpoint_dir']
         self.result_dir = args['result_dir']
         self.log_dir = args['log_dir']
         self.sample_dir = args['sample_dir']
+        self.config_dir = args['config_dir']
         self.dataset_name = args['dataset']
 
         """ Network parameters """
@@ -51,6 +40,7 @@ class DeepNetwork():
         """ Misc """
         # self.save_freq = args['save_freq']
         self.log_template = 'step [{}/{}]: loss: {:.3f}'
+        self.acc_log_template = 'step [{}/{}]: accuracy: {:.3f}'
 
         """ Directory """
         self.sample_dir = os.path.join(self.sample_dir, self.model_dir)
@@ -75,7 +65,7 @@ class DeepNetwork():
         self.dataset_iter = iter(self.loader)
 
         """ Network """
-        self.network = NetModel(input_shape=self.img_size, feature_size=self.feature_size).to(device)
+        self.network = Net(input_shape=self.img_size, feature_size=self.feature_size).to(device)
 
         """ Optimizer """
         self.optim = torch.optim.Adam(self.network.parameters(), lr=self.lr)
@@ -103,14 +93,13 @@ class DeepNetwork():
 
         # forward pass
         logit = self.network(real_images)
-
         # loss
         loss = cross_entroy_loss(logit, label)
 
         # backword
         apply_gradients(loss, self.optim)
 
-        return loss
+        return logit, loss
 
     def train_model(self, device):
         # setup tensorboard
@@ -128,43 +117,55 @@ class DeepNetwork():
         print('max_steps: {}'.format(self.iteration))
         print()
 
-        losses = {'loss': 0.0}
+        train_loss_list = []
 
         print("=======================================")
         print("Phase : training")
 
+        best_loss = 1
+        iter_per_epoch = max(self.dataset_num // self.batch_size, 1)
+        epoch = 0
+        self.dataset_iter = iter(self.loader)
         for idx in range(self.start_iteration, self.iteration):
-
-            # will add train time
-            if idx % self.dataset_num == 0:
-                self.dataset_iter = iter(self.loader)
+            # print(idx)
             real_img, label = next(self.dataset_iter)
             real_img = real_img.to(device)
             label = label.to(device)
+            # label = one_hot(label)
 
             if idx == 0:
                 print("count params")
                 n_params = count_parameters(self.network)
                 print("network parameters : ", format(n_params, ','))
 
-            loss = self.train_step(real_img, label, device=device)
-            losses['loss'] = loss
+            logit, loss = self.train_step(real_img, label, device=device)
 
-            # reduce loss
-            losses = reduce_loss(losses)
+            acc = accuracy(logit, label)
+            print("acc")
+            print(self.acc_log_template.format(idx + 1, self.iteration, acc))
+            train_loss_list.append(loss)
+            if idx % iter_per_epoch == 0:
+                if idx == 0:
+                    continue
+                """ calculate average loss for each epoch """
+                loss_per_epoch = sum(train_loss_list) / iter_per_epoch
 
-            print(self.log_template.format(idx + 1, self.iteration, loss))
+                print("epoch")
+                print(self.log_template.format(epoch, self.iteration // iter_per_epoch, loss_per_epoch))
 
-            # write train result on summary
+                if loss_per_epoch <= best_loss:
+                    self.torch_save(idx)
+                    best_loss = min(loss_per_epoch, best_loss)
+                train_loss_list = []
+                epoch += 1
         print("=======================================")
         # save model for final step
-        self.torch_save(self.iteration)
         # print("Total train time: %4.4f" % (time.time() - start_time))
 
     def torch_save(self, idx):
         print()
         print("Saving model")
-        print("path" + os.path.join(self.checkpoint_dir, "iter_{}.pt".format(idx)))
+        print("path : " + os.path.join(self.checkpoint_dir, "iter_{}.pt".format(idx)))
         torch.save(
             {
                 'network': self.network.state_dict(),
@@ -172,12 +173,6 @@ class DeepNetwork():
             },
             os.path.join(self.checkpoint_dir, 'iter_{}.pt'.format(idx))
         )
-
-    def test_for_template_arch(self, data):
-        result = self.network.forward(data)
-
-        print("test for template arch :")
-        print(result)
 
     @property
     def model_dir(self):

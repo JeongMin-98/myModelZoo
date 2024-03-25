@@ -1,22 +1,18 @@
-# tf-torch-template
-###  Deep learning project template with pytorch
+# MNIST 분류 모델 만들기
 
-+ WIP
-  + utils
-    - [X] datalodaer
-    - [ ] utils
-- [ ] dataset
--[ ] network
--[ ] model
--[ ] main
+## To Test For template
 
----
-<div align="center">
-  <img src="./assets/code_structure.png">
-</div>
+### Data loader (FIX!!)
++ Epoch
++ Iteration
++ Batch_size
+
+
+템플릿 테스트를 위한 MNIST 분류 모델
++ 완성이후 Template 수정할 것!
 
 
 ## Author
 
 + Jeongmin Kim
-+ reference by [Junho Kim](http://bit.ly/jhkim_resume)
+

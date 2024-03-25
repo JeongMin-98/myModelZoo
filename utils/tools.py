@@ -64,6 +64,11 @@ def cross_entroy_loss(logit, label):
     return loss
 
 
+def accuracy(output, label):
+    y = torch.argmax(output, dim=1)
+    return (y.eq(label).sum())
+
+
 def reduce_loss(tmp):
     """ will implement reduce_loss func """
     loss = tmp

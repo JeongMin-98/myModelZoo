@@ -1,7 +1,7 @@
 # from model.torch_model import run_fn
-from model.exampleModel import run_fn
+from model.myCustomMnistModel import run_fn
 import argparse
-from utils.utils import *
+from utils.tools import *
 
 
 def parse_args():
@@ -16,9 +16,9 @@ def parse_args():
     # parser.add_argument('--model', type=str, default='vggnet-19.cfg', help='The name of the model(config format)')
 
     parser.add_argument('--phase', type=str, default='train', help='train or test')
-    parser.add_argument('--iteration', type=int, default=1)
+    parser.add_argument('--iteration', type=int, default=10000)
     parser.add_argument('--img_size', type=int, default=28, help='The size of image')
-    parser.add_argument('--batch_size', type=int, default=1, help='The size of batch size')
+    parser.add_argument('--batch_size', type=int, default=64, help='The size of batch size')
     parser.add_argument('--feature_size', type=int, default=64, help='The size of feature size')
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 
