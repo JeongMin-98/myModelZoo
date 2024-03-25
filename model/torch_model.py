@@ -122,45 +122,54 @@ class DeepNetwork():
         print("=======================================")
         print("Phase : training")
 
-        best_loss = 1
+        best_loss = 1e9
+
+        # number of self.dataset_iter
         iter_per_epoch = max(self.dataset_num // self.batch_size, 1)
         epoch = 0
-        self.dataset_iter = iter(self.loader)
+        acc = 0
         for idx in range(self.start_iteration, self.iteration):
-            # print(idx)
-            real_img, label = next(self.dataset_iter)
-            real_img = real_img.to(device)
-            label = label.to(device)
-            # label = one_hot(label)
 
             if idx == 0:
+                print("=======================================")
                 print("count params")
                 n_params = count_parameters(self.network)
                 print("network parameters : ", format(n_params, ','))
+                print("=======================================")
 
-            logit, loss = self.train_step(real_img, label, device=device)
-
-            acc = accuracy(logit, label)
-            print("acc")
-            print(self.acc_log_template.format(idx + 1, self.iteration, acc))
-            train_loss_list.append(loss)
             if idx % iter_per_epoch == 0:
                 if idx == 0:
                     continue
+                self.dataset_iter = iter(self.loader)
                 """ calculate average loss for each epoch """
                 loss_per_epoch = sum(train_loss_list) / iter_per_epoch
 
+                print("=======================================")
                 print("epoch")
                 print(self.log_template.format(epoch, self.iteration // iter_per_epoch, loss_per_epoch))
+                print()
 
-                if loss_per_epoch <= best_loss:
-                    self.torch_save(idx)
-                    best_loss = min(loss_per_epoch, best_loss)
+                print("Accuracy")
+                print(self.acc_log_template.format(epoch, self.iteration // iter_per_epoch, acc / iter_per_epoch * 100))
+                print("=======================================")
+                """ Each epoch, Save model """
+                self.torch_save(idx)
+
+                loss = 0
                 train_loss_list = []
                 epoch += 1
+
+            real_img, label = next(self.dataset_iter)
+            real_img = real_img.to(device)
+            label = label.to(device)
+
+            logit, loss = self.train_step(real_img, label, device=device)
+            acc = accuracy(logit, label)
+            train_loss_list.append(loss)
+            train_summary_writer.add_scalar('acc', acc, global_step=idx)
+            train_summary_writer.add_scalar('loss', loss, global_step=idx)
+
         print("=======================================")
-        # save model for final step
-        # print("Total train time: %4.4f" % (time.time() - start_time))
 
     def torch_save(self, idx):
         print()

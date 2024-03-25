@@ -13,8 +13,10 @@ def run_fn(args):
     model.build_model(device)
 
     # summary(model.network, (64, 28, 28), device="cuda")
-
-    model.train_model(device)
+    if args['phase'] == "train":
+        model.train_model(device)
+    if args["phase"] == "test":
+        model.test_model(device)
 
 
 class MyCustomMnistModel(DeepNetwork):
@@ -32,12 +34,12 @@ class MyCustomMnistModel(DeepNetwork):
         check_folder(config_path)
 
     def build_model(self, device):
-        train_data, test_data = download_mnist_data()
+        train_data = download_mnist_data(train=True)
         self.dataset_num = train_data.__len__()
 
         """ Load dataset"""
         # implement soon
-        self.loader = torch.utils.data.DataLoader(train_data, batch_size=64, shuffle=True)
+        self.loader = torch.utils.data.DataLoader(train_data, batch_size=self.batch_size, shuffle=True)
         self.dataset_iter = iter(self.loader)
 
         """ Network """
@@ -62,14 +64,27 @@ class MyCustomMnistModel(DeepNetwork):
         else:
             self.start_iteration = 0
 
-    # def train_step(self, real_images, label, device=torch.device('cuda')):
-    #     return super().train_step(real_images, label, device=device)
-    #
-    # def train_model(self, device):
-    #     super().train_model(device)
-    #
-    # def torch_save(self, idx):
-    #     super().torch_save(idx)
+    def test_model(self, device):
 
+        print()
+        print("=======================================")
+        print("phase : Test ")
 
+        test_data = download_mnist_data(train=False)
+        test_loader = torch.utils.data.DataLoader(test_data, batch_size=self.batch_size, shuffle=True)
+        self.network.eval()
+        correct = 0
+        total = 0
 
+        with torch.no_grad():
+            for images, labels in test_loader:
+                images = images.to(device)
+                labels = labels.to(device)
+                outputs = self.network(images)
+                # _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += accuracy(outputs, labels)
+
+        acc = 100 * correct / total
+        print(self.acc_log_template.format(1, 1, acc))
+        return acc
