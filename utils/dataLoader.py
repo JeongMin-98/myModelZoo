@@ -58,21 +58,23 @@ def mnist_transform():
     return transforms.Compose(transforms_list)
 
 
-def download_mnist_data():
+def download_mnist_data(train=True):
     download_path = os.path.join(os.getcwd(), 'dataset', 'mnist')
     check_folder(download_path)
 
-    train_data = MNIST(
-        root=download_path,
-        train=True,
-        download=True,
-        transform=transforms.ToTensor()
-    )
-    test_data = MNIST(
-        root=download_path,
-        train=False,
-        download=True,
-        transform=transforms.ToTensor()
-    )
+    if train:
+        data = MNIST(
+            root=download_path,
+            train=True,
+            download=True,
+            transform=transforms.ToTensor()
+        )
+    else:
+        data = MNIST(
+            root=download_path,
+            train=False,
+            download=True,
+            transform=transforms.ToTensor()
+        )
 
-    return train_data, test_data
+    return data
