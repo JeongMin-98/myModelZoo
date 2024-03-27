@@ -2,6 +2,8 @@ import torch
 import os, re
 import numpy as np
 from PIL import Image
+import matplotlib.pyplot as plt
+import numpy as np
 
 """ Check Device and Path for saving and loading """
 
@@ -145,6 +147,16 @@ def show_img(img):
     img = np.array(img, dtype=np.uint8)
     img = Image.fromarray(img)
     img.show()
+
+
+def visualize_inference(img, label, batch_size):
+    """ Visualize Image Batch"""
+    fig, axes = plt.subplots(1, batch_size, figsize=(10, 10))
+    for i in range(batch_size):
+        axes[i].imshow(np.squeeze(img[i]), cmap="gray")
+        axes[i].set_title(f"predicted: {label[i]}")
+        axes[i].axis('off')
+    plt.show()
 
 
 if __name__ == '__main__':
