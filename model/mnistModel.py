@@ -1,9 +1,13 @@
-import torch.utils.data
-from torch.nn.functional import one_hot
-from utils.dataLoader import ImageDataset
-from utils.tools import *
-from network.exampleNet import *
+import os
+import torch
+from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
+from utils.dataLoader import download_mnist_data
+from utils.dataLoader import ImageDataset
+from utils.tools import check_folder, count_parameters, find_latest_ckpt, check_device, cross_entroy_loss
+from utils.tools import requires_grad, apply_gradients
+from utils.tools import parse_model_config, accuracy
+from network.exampleNet import Net
 
 from torchsummary import summary
 
@@ -12,7 +16,11 @@ def run_fn(args):
     device = check_device()
     model = DeepNetwork(args)
     model.build_model(device)
-    model.train_model(device)
+
+    if args['phase'] == "train":
+        model.train_model(device)
+    if args['phase'] == "test":
+        model.test_model(device)
 
 
 class DeepNetwork():
@@ -29,7 +37,11 @@ class DeepNetwork():
         """ Network parameters """
         self.feature_size = args['feature_size']
 
+        """ Network architecture from config """
+        self.config_dir = args['config_dir']
+
         """ Training parameters """
+        self.train_size = args['train_size']
         self.lr = args['lr']
         self.iteration = args['iteration']
         self.img_size = args['img_size']
@@ -49,6 +61,13 @@ class DeepNetwork():
         check_folder(self.checkpoint_dir)
         self.log_dir = os.path.join(self.log_dir, self.model_dir)
         check_folder(self.log_dir)
+        self.config_dir = os.path.join(self.config_dir, self.model_name)
+        check_folder(self.config_dir)
+
+        # load config file
+        config_path = os.path.join(self.config_dir, self.model_name + ".cfg")
+        self.cfg = parse_model_config(config_path)
+        check_folder(config_path)
 
         """ Dataset """
         dataset_path = './dataset'
@@ -58,18 +77,26 @@ class DeepNetwork():
     # Model
     ##################################################################################
     def build_model(self, device):
-        """ Dataset Load """
-        dataset = ImageDataset(dataset_path=self.dataset_path, img_size=self.img_size)
-        self.dataset_num = dataset.__len__()
-        self.loader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, num_workers=1, shuffle=True)
-        self.dataset_iter = iter(self.loader)
+        train_data = download_mnist_data(train=True)
+        self.dataset_num = train_data.__len__()
+        # split the dataset into training and validation sets.
+        train_size = int(self.train_size * self.dataset_num)
+        val_size = self.dataset_num - train_size
+
+        train_data, val_data = random_split(train_data, [train_size, val_size])
+
+        """ Load dataset"""
+        self.train_loader = DataLoader(train_data, batch_size=self.batch_size, shuffle=True)
+        self.trainning_set_iter = iter(self.train_loader)
+
+        self.val_loader = DataLoader(val_data, batch_size=self.batch_size, shuffle=True)
+        self.validation_set_iter = iter(self.val_loader)
 
         """ Network """
-        self.network = Net(input_shape=self.img_size, feature_size=self.feature_size).to(device)
+        self.network = Net(config=self.cfg).to(device)
 
         """ Optimizer """
         self.optim = torch.optim.Adam(self.network.parameters(), lr=self.lr)
-
         """ Checkpoint """
         latest_ckpt_name, start_iter = find_latest_ckpt(self.checkpoint_dir)
 
@@ -101,6 +128,37 @@ class DeepNetwork():
 
         return logit, loss
 
+    def test_model(self, device, val_loader=None, valid=False):
+
+        phase = "Test"
+        if valid:
+            phase = "Validation"
+        print()
+        print("=======================================")
+        print("phase : {} ".format(phase))
+
+        if valid is False:
+            test_data = download_mnist_data(train=False)
+            eval_loader = torch.utils.data.DataLoader(test_data, batch_size=self.batch_size, shuffle=True)
+        else:
+            eval_loader = val_loader
+        self.network.eval()
+        correct = 0
+        total = 0
+
+        with torch.no_grad():
+            for images, labels in eval_loader:
+                images = images.to(device)
+                labels = labels.to(device)
+                outputs = self.network(images)
+                # _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += accuracy(outputs, labels)
+
+        acc = 100 * correct / total
+        print() if valid else print(self.acc_log_template.format(1, 1, acc))
+        return acc
+
     def train_model(self, device):
         # setup tensorboard
         train_summary_writer = SummaryWriter(self.log_dir)
@@ -109,6 +167,7 @@ class DeepNetwork():
         print()
         print(self.dataset_path)
         print("Dataset number : ", self.dataset_num)
+        print("Training set ratio : ", self.train_size)
         print("Each batch size : ", self.batch_size)
         print("Global batch size : ", self.global_batch_size)
         print("Target image size : ", self.img_size)
@@ -117,17 +176,13 @@ class DeepNetwork():
         print('max_steps: {}'.format(self.iteration))
         print()
 
-        train_loss_list = []
-
         print("=======================================")
         print("Phase : training")
-
-        best_loss = 1e9
-
+        train_loss_list = []
+        best_loss = float("inf")
         # number of self.dataset_iter
-        iter_per_epoch = max(self.dataset_num // self.batch_size, 1)
+        iter_per_epoch = max(self.dataset_num * self.train_size // self.batch_size, 1)
         epoch = 0
-        acc = 0
         for idx in range(self.start_iteration, self.iteration):
 
             if idx == 0:
@@ -138,35 +193,34 @@ class DeepNetwork():
                 print("=======================================")
 
             if idx % iter_per_epoch == 0:
-                if idx == 0:
-                    continue
-                self.dataset_iter = iter(self.loader)
-                """ calculate average loss for each epoch """
-                loss_per_epoch = sum(train_loss_list) / iter_per_epoch
+                if idx > 0:
+                    epoch += 1
+                    print("=======================================")
+                    train_loss = sum(train_loss_list) / iter_per_epoch
+                    print("train Loss " + self.log_template.format(epoch, self.iteration // iter_per_epoch, train_loss))
+                    train_summary_writer.add_scalar("train_loss", train_loss, idx)
+                    print()
 
-                print("=======================================")
-                print("epoch")
-                print(self.log_template.format(epoch, self.iteration // iter_per_epoch, loss_per_epoch))
-                print()
+                    # validation
+                    val_acc = self.test_model(device, self.val_loader, True)
+                    print("val Acc " + self.acc_log_template.format(epoch, self.iteration // iter_per_epoch, val_acc))
+                    train_summary_writer.add_scalar("val_acc", val_acc, idx)
 
-                print("Accuracy")
-                print(self.acc_log_template.format(epoch, self.iteration // iter_per_epoch, acc / iter_per_epoch * 100))
-                print("=======================================")
-                """ Each epoch, Save model """
-                self.torch_save(idx)
+                    """ Each epoch, Save model """
+                    self.torch_save(idx)
 
-                loss = 0
-                train_loss_list = []
-                epoch += 1
+                    loss = 0
+                    train_loss_list = []
 
-            real_img, label = next(self.dataset_iter)
+                self.trainning_set_iter = iter(self.train_loader)
+
+            real_img, label = next(self.trainning_set_iter)
             real_img = real_img.to(device)
             label = label.to(device)
 
             logit, loss = self.train_step(real_img, label, device=device)
-            acc = accuracy(logit, label)
+            # acc = accuracy(logit, label)
             train_loss_list.append(loss)
-            train_summary_writer.add_scalar('acc', acc, global_step=idx)
             train_summary_writer.add_scalar('loss', loss, global_step=idx)
 
         print("=======================================")
