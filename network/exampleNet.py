@@ -1,5 +1,6 @@
 from torch import nn
 from torchvision.ops import MLP
+from torch.nn import Conv2d, AvgPool2d
 
 """ Neural Network template (Using config file) """
 
@@ -16,6 +17,29 @@ def _add_mlp_block(block_info):
     return block
 
 
+def _add_conv_block(block_info, module):
+    in_channel = int(block_info["in_channels"])
+    out_channel = int(block_info["out_channels"])
+    kernel_size = int(block_info["kernel_size"])
+    stride = int(block_info["stride"])
+    activation = block_info["activation_layer"]
+    if activation == "tanh":
+        activation = nn.Tanh
+    module.append(Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride))
+    module.append(activation)
+
+    return module
+
+
+def _add_pooling_layer(block_info):
+    in_channel = int(block_info["in_channels"])
+    out_channel = int(block_info["out_channels"])
+    kernel_size = int(block_info["kernel_size"])
+    stride = int(block_info["stride"])
+
+    return nn.AvgPool2d(kernel_size=kernel_size, stride=2)
+
+
 def set_layer(config):
     """ set layer from config file """
     module_list = nn.ModuleList()
@@ -26,8 +50,19 @@ def set_layer(config):
     for idx, info in enumerate(config):
         if info['type'] == 'MLP':
             module_list.append(_add_mlp_block(info))
+            continue
         if info['type'] == 'Output':
             module_list.append(nn.LogSoftmax(dim=1))
+        if info['type'] == 'Conv':
+            module_list = _add_conv_block(info, module_list)
+        if info['type'] == 'Pool':
+            module_list.append(_add_pooling_layer(info))
+
+        if "activation" in info.keys():
+            if info['activation'] == "relu":
+                module_list.append(nn.ReLU(inplace=True))
+            if info['activation'] == "tanh":
+                module_list.append(nn.Tanh(inplace=True))
 
     return module_list
 

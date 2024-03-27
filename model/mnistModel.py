@@ -14,6 +14,14 @@ from network.exampleNet import Net
 from torchsummary import summary
 
 
+def check_model_build(args):
+    device = check_device()
+    model = DeepNetwork(args)
+    model.build_model(device)
+
+    summary(model.network, input_size=(1, 32, 32), device="gpu")
+
+
 def run_fn(args):
     device = check_device()
     model = DeepNetwork(args)

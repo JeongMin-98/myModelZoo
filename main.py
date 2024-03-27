@@ -8,7 +8,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
 
     # dataset
-    parser.add_argument('--dataset', type=str, default='Update', help="The name of the dataset")
+    parser.add_argument('--dataset', type=str, default='MNIST', help="The name of the dataset")
 
     # training
     # => Plan : To make config loader
