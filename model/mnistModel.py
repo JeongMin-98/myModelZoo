@@ -2,6 +2,8 @@ import os
 import torch
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
+
+import utils.tools
 from utils.dataLoader import download_mnist_data
 from utils.dataLoader import ImageDataset
 from utils.tools import check_folder, count_parameters, find_latest_ckpt, check_device, cross_entroy_loss
@@ -151,9 +153,14 @@ class DeepNetwork():
                 images = images.to(device)
                 labels = labels.to(device)
                 outputs = self.network(images)
-                # _, predicted = torch.max(outputs.data, 1)
+                _, predicted = torch.max(outputs.data, 1)
                 total += labels.size(0)
                 correct += accuracy(outputs, labels)
+
+                images = images.cpu().numpy()
+                predicted = predicted.cpu().numpy()
+
+                utils.tools.visualize_inference(images, predicted, batch_size=self.batch_size)
 
         acc = 100 * correct / total
         print() if valid else print(self.acc_log_template.format(1, 1, acc))
