@@ -19,7 +19,7 @@ def check_model_build(args):
     model = DeepNetwork(args)
     model.build_model(device)
 
-    summary(model.network, input_size=(1, 32, 32), device="gpu")
+    summary(model.network, input_size=(1, 32, 32), device="cuda")
 
 
 def run_fn(args):

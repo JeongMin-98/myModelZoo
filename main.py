@@ -1,4 +1,4 @@
-from model.mnistModel import run_fn
+from model.mnistModel import run_fn, check_model_build
 import argparse
 from utils.tools import *
 
@@ -16,7 +16,7 @@ def parse_args():
 
     parser.add_argument('--phase', type=str, default='train', help='train or test')
     parser.add_argument('--iteration', type=int, default=10000)
-    parser.add_argument('--img_size', type=int, default=28, help='The size of image')
+    parser.add_argument('--img_size', type=int, default=32, help='The size of image')
     parser.add_argument('--batch_size', type=int, default=64, help='The size of batch size')
     parser.add_argument('--feature_size', type=int, default=64, help='The size of feature size')
     parser.add_argument('--train_size', type=int, default=0.8,
@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 
     # model name
-    parser.add_argument("--model_name", type=str, default='myMnistNet', help="The name of the model")
+    parser.add_argument("--model_name", type=str, default='LeNet', help="The name of the model")
 
     # network settings
     parser.add_argument('--config_dir', type=str, default='./cfg')
@@ -72,7 +72,8 @@ def main():
     args = vars(parse_args())
 
     # run
-    run_fn(args=args)
+    # run_fn(args=args)
+    check_model_build(args=args)
 
 
 if __name__ == '__main__':
