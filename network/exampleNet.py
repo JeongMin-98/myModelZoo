@@ -26,8 +26,10 @@ def _add_conv_block(block_info):
     out_channel = int(block_info["out_channels"])
     kernel_size = int(block_info["kernel_size"])
     stride = int(block_info["stride"])
-    activation = block_info["activation_layer"]
-    return Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride)
+    padding = 0
+    if "padding" in block_info:
+        padding = int(block_info["padding"])
+    return Conv2d(in_channel, out_channel, kernel_size=kernel_size, stride=stride, padding=padding)
 
 
 def _add_pooling_layer(block_info):
@@ -73,8 +75,6 @@ class Net(nn.Module):
         self.layers = set_layer(self.config)
 
     def forward(self, x):
-        print(x.shape)
         for idx, layer in enumerate(self.layers):
-            print(x.shape)
             x = layer(x)
         return x

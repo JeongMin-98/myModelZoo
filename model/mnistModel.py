@@ -19,7 +19,7 @@ def check_model_build(args):
     model = DeepNetwork(args)
     model.build_model(device)
 
-    summary(model.network, input_size=(1, 32, 32), device="cuda")
+    summary(model.network, input_size=(1, 28, 28), device="cuda")
 
 
 def run_fn(args):
@@ -168,7 +168,8 @@ class DeepNetwork():
                 images = images.cpu().numpy()
                 predicted = predicted.cpu().numpy()
 
-                utils.tools.visualize_inference(images, predicted, batch_size=self.batch_size)
+                if valid is False:
+                    utils.tools.visualize_inference(images, predicted, batch_size=self.batch_size)
 
         acc = 100 * correct / total
         print() if valid else print(self.acc_log_template.format(1, 1, acc))
