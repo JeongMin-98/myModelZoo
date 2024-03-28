@@ -159,6 +159,36 @@ def visualize_inference(img, label, batch_size):
     plt.show()
 
 
+def visualize_feature_map(model, image):
+    model.eval()
+
+    # transformer
+
+    feature_map = None
+
+    # input_tensor
+    input_tensor = None
+
+    def hook(module, input, output):
+        nonlocal feature_map
+        feature_map = output.detach().cpu()
+
+    target_layer = model.network.layer[0]
+    hook_handle = target_layer.register_forward_hook(hook)
+
+    with torch.no_grad():
+        model(input_tensor)
+
+    hook_handle.remove()
+
+    plt.figure(figsize=(12, 8))
+    for i in range(feature_map.size(1)):
+        plt.subplots(4, 8, i + 1)
+        plt.imshow(feature_map[0, i], cmap='viridis')
+        plt.axis('off')
+    plt.show()
+
+
 if __name__ == '__main__':
     """ cfg loader test """
     cfg = parse_model_config("../cfg/myMnistNet/myMnistNet.cfg")
