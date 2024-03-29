@@ -9,9 +9,13 @@ from utils.dataLoader import ImageDataset
 from utils.tools import check_folder, count_parameters, find_latest_ckpt, check_device, cross_entroy_loss
 from utils.tools import requires_grad, apply_gradients
 from utils.tools import parse_model_config, accuracy
+from utils.tools import visualize_feature_map
 from network.exampleNet import Net
 
 from torchsummary import summary
+
+from PIL import Image
+import numpy as np
 
 
 def check_model_build(args):
@@ -31,6 +35,17 @@ def run_fn(args):
         model.train_model(device)
     if args['phase'] == "test":
         model.test_model(device)
+
+
+def run_visualize_feature_map_func(args):
+    device = check_device()
+    model = DeepNetwork(args)
+    model.build_model(device)
+
+    for idx, (img, label) in enumerate(model.train_loader):
+        visualize_feature_map(model, img)
+        if idx == 10:
+            break
 
 
 class DeepNetwork():

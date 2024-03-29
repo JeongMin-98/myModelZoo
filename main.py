@@ -1,4 +1,4 @@
-from model.mnistModel import run_fn, check_model_build
+from model.mnistModel import run_fn, check_model_build, run_visualize_feature_map_func
 import argparse
 from utils.tools import *
 
@@ -16,8 +16,8 @@ def parse_args():
 
     parser.add_argument('--phase', type=str, default='train', help='train or test')
     parser.add_argument('--iteration', type=int, default=10000)
-    parser.add_argument('--img_size', type=int, default=32, help='The size of image')
-    parser.add_argument('--batch_size', type=int, default=64, help='The size of batch size')
+    parser.add_argument('--img_size', type=int, default=28, help='The size of image')
+    parser.add_argument('--batch_size', type=int, default=8, help='The size of batch size')
     parser.add_argument('--feature_size', type=int, default=64, help='The size of feature size')
     parser.add_argument('--train_size', type=int, default=0.8,
                         help='The size of train_size (When splitting dataset into train and val sets)')
@@ -74,7 +74,7 @@ def main():
     # run
     run_fn(args=args)
     # check_model_build(args=args)
-
+    # run_visualize_feature_map_func(args)
 
 if __name__ == '__main__':
     main()
