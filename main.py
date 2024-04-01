@@ -72,9 +72,10 @@ def main():
     args = vars(parse_args())
 
     # run
-    run_fn(args=args)
-    # check_model_build(args=args)
+    # run_fn(args=args)
+    check_model_build(args=args)
     # run_visualize_feature_map_func(args)
+
 
 if __name__ == '__main__':
     main()
