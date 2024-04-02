@@ -43,8 +43,9 @@ def _add_conv_block(block_info):
 
 
 def _add_pooling_layer(block_info):
+    if block_info["method"] == "AdaptAvg":
+        return nn.AdaptiveAvgPool2d((1, 1))
     pooling_layer = nn.AvgPool2d if block_info["method"] == "average" else nn.MaxPool2d
-
     params = {
         "kernel_size": int(block_info["kernel_size"]),
         "stride": int(block_info["stride"])

@@ -19,7 +19,7 @@ def parse_args():
     parser.add_argument('--img_size', type=int, default=28, help='The size of image')
     parser.add_argument('--batch_size', type=int, default=8, help='The size of batch size')
     parser.add_argument('--feature_size', type=int, default=64, help='The size of feature size')
-    parser.add_argument('--train_size', type=int, default=0.8,
+    parser.add_argument('--train_size', type=float, default=0.8,
                         help='The size of train_size (When splitting dataset into train and val sets)')
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 
@@ -72,8 +72,8 @@ def main():
     args = vars(parse_args())
 
     # run
-    # run_fn(args=args)
-    check_model_build(args=args)
+    run_fn(args=args)
+    # check_model_build(args=args)
     # run_visualize_feature_map_func(args)
 
 
