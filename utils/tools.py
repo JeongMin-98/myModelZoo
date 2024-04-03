@@ -160,7 +160,7 @@ def visualize_inference(img, label, batch_size):
     plt.show()
 
 
-def visualize_feature_map(model, image):
+def visualize_feature_map(model, image, label):
     model.network.eval()
 
     # transformer

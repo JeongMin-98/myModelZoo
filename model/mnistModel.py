@@ -43,7 +43,7 @@ def run_visualize_feature_map_func(args):
     model.build_model(device)
 
     for idx, (img, label) in enumerate(model.train_loader):
-        visualize_feature_map(model, img)
+        visualize_feature_map(model, img, label)
         if idx == 10:
             break
 
