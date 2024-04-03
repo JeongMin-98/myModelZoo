@@ -55,3 +55,20 @@ class NiNBlock(nn.Sequential):
         layers.append(activation_layer(**params))
 
         super().__init__(*layers)
+
+
+class Inception(nn.Module):
+    def __init__(self):
+        super(Inception, self).__init__()
+        self.branch1 = nn.Sequential()  # 1*1 conv
+        self.branch2 = nn.Sequential()  # 1*1 conv(reduce) + 3*3 conv
+        self.branch3 = nn.Sequential()  # 1*1 conv(reduce) + 5*5 conv
+        self.branch4 = nn.Sequential()  # maxpool(3*3) + 1*1 conv
+
+    def forward(self, x):
+        x1 = self.branch1(x)
+        x2 = self.branch2(x)
+        x3 = self.branch3(x)
+        x4 = self.branch4(x)
+        x = torch.cat([x1, x2, x3, x4])
+        return x
