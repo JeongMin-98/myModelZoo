@@ -60,10 +60,22 @@ class NiNBlock(nn.Sequential):
 class Inception(nn.Module):
     def __init__(self):
         super(Inception, self).__init__()
-        self.branch1 = nn.Sequential()  # 1*1 conv
-        self.branch2 = nn.Sequential()  # 1*1 conv(reduce) + 3*3 conv
-        self.branch3 = nn.Sequential()  # 1*1 conv(reduce) + 5*5 conv
-        self.branch4 = nn.Sequential()  # maxpool(3*3) + 1*1 conv
+        prev_channels = 192
+        self.branch1 = nn.Sequential(
+            nn.Conv2d(prev_channels, 64, kernel_size=(1, 1))
+        )  # 1*1 conv
+        self.branch2 = nn.Sequential(
+            nn.Conv2d(prev_channels, 96, kernel_size=(1, 1)),
+            nn.Conv2d(96, 128, kernel_size=(3, 3))
+        )  # 1*1 conv(reduce) + 3*3 conv
+        self.branch3 = nn.Sequential(
+            nn.Conv2d(prev_channels, 16, kernel_size=(1, 1)),
+            nn.Conv2d(16, 32, kernel_size=(5, 5))
+        )  # 1*1 conv(reduce) + 5*5 conv
+        self.branch4 = nn.Sequential(
+            nn.MaxPool2d((3, 3), stride=1),
+            nn.Conv2d(prev_channels, 32, kernel_size=(1, 1))
+        )  # maxpool(3*3) + 1*1 conv
 
     def forward(self, x):
         x1 = self.branch1(x)
@@ -72,3 +84,8 @@ class Inception(nn.Module):
         x4 = self.branch4(x)
         x = torch.cat([x1, x2, x3, x4])
         return x
+
+
+if __name__ == '__main__':
+    # write test code
+    pass
