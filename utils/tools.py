@@ -183,9 +183,10 @@ def visualize_feature_map(model, image, label):
 
     hook_handle.remove()
 
-    plt.figure(figsize=(12, 8))
-    for i in range(feature_map.size(1)):
-        plt.subplot(4, 8, i + 1)
+    plt.figure(figsize=(20, 15))
+    plt.title("{} feature map".format(label), loc='center')
+    for i in range(min(feature_map.size(1), 64)):
+        plt.subplot(8, 8, i + 1)
         plt.imshow(feature_map[0, i], cmap='viridis')
         plt.axis('off')
     plt.show()
