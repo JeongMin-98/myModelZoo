@@ -30,8 +30,6 @@ def check_model_build(args):
                           col_width=16,
                           col_names=["kernel_size", "output_size", "num_params", "mult_adds"],
                           row_settings=["var_names"])
-    summary_stat = str(model_stats)
-    print(summary_stat)
 
 
 def run_fn(args):
