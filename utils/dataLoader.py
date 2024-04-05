@@ -5,7 +5,7 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-from torchvision.datasets import MNIST
+from torchvision.datasets import MNIST, ImageNet
 from utils.tools import check_folder, data_transform
 
 
@@ -60,3 +60,16 @@ def download_mnist_data(train=True):
         )
 
     return data
+
+
+def download_imagenet_data(train=True):
+    download_path = os.path.join(os.getcwd(), 'dataset', 'imageNet')
+    check_folder(download_path)
+
+    if train:
+        data = ImageNet(
+            root=download_path,
+            train=True,
+            download=True,
+            transform=transforms.ToTensor()
+        )
