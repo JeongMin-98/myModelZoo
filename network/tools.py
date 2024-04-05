@@ -40,11 +40,19 @@ def _add_mlp_block(block_info):
     params = {
         "in_channels": int(block_info["in_channels"]),
         "hidden_channels": block_info["hidden_channels"],
-        "dropout": float(block_info["dropout"]),
+        "dropout": float(block_info["dropout"]) if float(block_info["dropout"]) > 0 else 0.0,
         "activation_layer": nn.ReLU if block_info["activation_layer"] == "ReLU" else nn.Tanh
     }
     block = MLP(**params)
     return block
+
+
+def _add_linear(block_info):
+    params = {
+        'in_features': int(block_info["in_channels"]),
+        'out_features': int(block_info['out_channels'])
+    }
+    return nn.Linear(**params)
 
 
 def _add_conv_block(block_info):
@@ -53,8 +61,10 @@ def _add_conv_block(block_info):
         "out_channels": int(block_info["out_channels"]),
         "kernel_size": int(block_info["kernel_size"]),
         "stride": int(block_info["stride"]),
-        "padding": int(block_info.get("padding", 0))  # Default padding is 0 if not specified
+        "padding": int(block_info.get("padding", 0)),  # Default padding is 0 if not specified
+        "padding_mode": "replicate"
     }
+
     return Conv2d(**params)
 
 
@@ -64,16 +74,24 @@ def _add_pooling_layer(block_info):
     pooling_layer = nn.AvgPool2d if block_info["method"] == "average" else nn.MaxPool2d
     params = {
         "kernel_size": int(block_info["kernel_size"]),
-        "stride": int(block_info["stride"])
+        "stride": int(block_info["stride"]),
+        "padding": int(block_info["padding"])
     }
 
     return pooling_layer(**params)
 
 
+def _add_dropout(block_info):
+    params = {
+        "p": float(block_info["dropout_ratio"])
+    }
+    return nn.Dropout(**params)
+
+
 def set_layer(config):
     """ set layer from config file """
     module_list = nn.ModuleList()
-    # sequential_layers = []
+    # top_dim = None
     # input shape
 
     # iter config files
@@ -92,6 +110,12 @@ def set_layer(config):
             module_list.append(_add_pooling_layer(info))
         if info['type'] == 'Flatten':
             module_list.append(nn.Flatten())
+        if info['type'] == 'Linear':
+            module_list.append(_add_linear(info))
+        if info['type'] == 'Inception':
+            module_list.append(_add_inception_block(info))
+        if info['type'] == 'dropout':
+            module_list.append(_add_dropout(info))
 
         if "activation_layer" in info.keys():
             if info['activation_layer'] == "relu":
