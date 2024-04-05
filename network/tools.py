@@ -3,7 +3,23 @@ from torch import nn
 from torch.nn import Conv2d
 from torchvision.ops import MLP
 
-from network.module import NiNBlock
+from network.module import NiNBlock, InceptionSequential
+
+
+# def _add_inception_block(previous_out_dim, block_info):
+def _add_inception_block(block_info):
+    params = {
+        # "in_channel": previous_out_dim,
+        "in_channel": int(block_info["in_channel"]),
+        "conv1x1_out_channels": block_info["conv1x1_out_channels"],
+        "conv3x3_reduce_out_channels": block_info["conv3x3_reduce_out_channels"],
+        "conv3x3_out_channels": block_info["conv3x3_out_channels"],
+        "conv5x5_reduce_out_channels": block_info["conv5x5_reduce_out_channels"],
+        "conv5x5_out_channels": block_info["conv5x5_out_channels"],
+        "proj_out_channels": block_info["proj_out_channels"],
+        "depth": int(block_info["depth"])
+    }
+    return InceptionSequential(**params)
 
 
 def _add_nin_block(block_info):

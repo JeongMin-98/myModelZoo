@@ -12,7 +12,7 @@ from utils.tools import parse_model_config, accuracy
 from utils.tools import visualize_feature_map
 from network.exampleNet import Net
 
-from torchsummary import summary
+from torchinfo import summary
 
 from PIL import Image
 import numpy as np
@@ -23,7 +23,15 @@ def check_model_build(args):
     model = DeepNetwork(args)
     model.build_model(device)
 
-    summary(model.network, input_size=(1, 28, 28), device="cuda")
+    model_stats = summary(model.network,
+                          input_size=(1, 3, 224, 224),
+                          device="cuda",
+                          verbose=1,
+                          col_width=16,
+                          col_names=["kernel_size", "output_size", "num_params", "mult_adds"],
+                          row_settings=["var_names"])
+    summary_stat = str(model_stats)
+    print(summary_stat)
 
 
 def run_fn(args):

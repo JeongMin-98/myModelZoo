@@ -24,7 +24,7 @@ def parse_args():
     parser.add_argument('--lr', type=float, default=1e-4, help='learning rate')
 
     # model name
-    parser.add_argument("--model_name", type=str, default='LeNet', help="The name of the model")
+    parser.add_argument("--model_name", type=str, default='GoogleNet', help="The name of the model")
 
     # network settings
     parser.add_argument('--config_dir', type=str, default='./cfg')

@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from typing import List, Optional, Callable
+from collections import OrderedDict
 
 
 class NiNBlock(nn.Sequential):
