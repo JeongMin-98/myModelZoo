@@ -134,3 +134,5 @@ dmypy.json
 checkpoint/
 logs/
 results/
+/dataset/imageNet/ILSVRC2012_devkit_t3.tar.gz
+/dataset/imageNet/ILSVRC2012_img_train_t3.tar
