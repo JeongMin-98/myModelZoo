@@ -4,6 +4,17 @@ from typing import List, Optional, Callable
 from collections import OrderedDict
 
 
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, kernel_size, **kwargs):
+        super(ConvBlock, self).__init__()
+        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=kernel_size, **kwargs)
+        self.bn = nn.BatchNorm2d()
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        return self.relu(self.bn(self.conv(x)))
+
+
 class NiNBlock(nn.Sequential):
     def __init__(self,
                  in_channels: int,

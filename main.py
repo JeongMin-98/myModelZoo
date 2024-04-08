@@ -8,16 +8,16 @@ def parse_args():
     parser = argparse.ArgumentParser(description=desc)
 
     # dataset
-    parser.add_argument('--dataset', type=str, default='MNIST', help="The name of the dataset")
+    parser.add_argument('--dataset', type=str, default='tiny-imagenet-200', help="The name of the dataset")
 
     # training
     # => Plan : To make config loader
     # parser.add_argument('--model', type=str, default='vggnet-19.cfg', help='The name of the model(config format)')
 
     parser.add_argument('--phase', type=str, default='train', help='train or test')
-    parser.add_argument('--iteration', type=int, default=10000)
+    parser.add_argument('--iteration', type=int, default=100000)
     parser.add_argument('--img_size', type=int, default=28, help='The size of image')
-    parser.add_argument('--batch_size', type=int, default=8, help='The size of batch size')
+    parser.add_argument('--batch_size', type=int, default=128, help='The size of batch size')
     parser.add_argument('--feature_size', type=int, default=64, help='The size of feature size')
     parser.add_argument('--train_size', type=float, default=0.8,
                         help='The size of train_size (When splitting dataset into train and val sets)')
@@ -72,8 +72,8 @@ def main():
     args = vars(parse_args())
 
     # run
-    # run_fn(args=args)
-    check_model_build(args=args)
+    run_fn(args=args)
+    # check_model_build(args=args)
     # run_visualize_feature_map_func(args)
 
 

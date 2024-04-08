@@ -3,7 +3,7 @@ from torch import nn
 from torch.nn import Conv2d
 from torchvision.ops import MLP
 
-from network.module import NiNBlock, InceptionSequential
+from network.module import NiNBlock, InceptionSequential, ConvBlock
 
 
 # def _add_inception_block(previous_out_dim, block_info):
@@ -62,8 +62,10 @@ def _add_conv_block(block_info):
         "kernel_size": int(block_info["kernel_size"]),
         "stride": int(block_info["stride"]),
         "padding": int(block_info.get("padding", 0)),  # Default padding is 0 if not specified
-        "padding_mode": "replicate"
     }
+
+    if block_info["type"] == "ConvBlock":
+        return ConvBlock(**params)
 
     return Conv2d(**params)
 
@@ -106,6 +108,8 @@ def set_layer(config):
             module_list.append(nn.LogSoftmax(dim=1))
         if info['type'] == 'Conv':
             module_list.append(_add_conv_block(info))
+        if info['type'] == 'LocalRespNorm':
+            module_list.append(nn.LocalResponseNorm(int(info['size'])))
         if info['type'] == 'Pooling':
             module_list.append(_add_pooling_layer(info))
         if info['type'] == 'Flatten':

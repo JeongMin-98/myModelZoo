@@ -5,7 +5,7 @@ import pandas as pd
 from PIL import Image
 from torch.utils.data import Dataset
 from torchvision import transforms
-from torchvision.datasets import MNIST, ImageNet
+from torchvision.datasets import MNIST, ImageNet, ImageFolder
 from utils.tools import check_folder, data_transform
 
 
@@ -62,14 +62,20 @@ def download_mnist_data(train=True):
     return data
 
 
-def download_imagenet_data(train=True):
-    download_path = os.path.join(os.getcwd(), 'dataset', 'imageNet')
-    check_folder(download_path)
+def load_imagenet(root=None, train=True):
+    if root is None:
+        return root
 
+    check_folder(root)
+    transfrom = transforms.Compose([
+        transforms.Resize((224, 224)),
+        transforms.ToTensor()
+    ])
     if train:
-        data = ImageNet(
-            root=download_path,
-            train=True,
-            download=True,
-            transform=transforms.ToTensor()
-        )
+        load_root = os.path.join(root, 'train')
+        data = ImageFolder(load_root, transform=transfrom)
+    else:
+        load_root = os.path.join(root, 'test')
+        data = ImageFolder(load_root, transform=transfrom)
+    return data
+

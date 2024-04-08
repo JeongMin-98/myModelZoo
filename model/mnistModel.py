@@ -37,6 +37,14 @@ def run_fn(args):
     model = DeepNetwork(args)
     model.build_model(device)
 
+    model_stats = summary(model.network,
+                          input_size=(1, 3, 224, 224),
+                          device="cuda",
+                          verbose=1,
+                          col_width=16,
+                          col_names=["kernel_size", "output_size", "num_params", "mult_adds"],
+                          row_settings=["var_names"])
+
     if args['phase'] == "train":
         model.train_model(device)
     if args['phase'] == "test":
@@ -108,7 +116,8 @@ class DeepNetwork():
     # Model
     ##################################################################################
     def build_model(self, device):
-        train_data = download_mnist_data(train=True)
+        # train_data = download_mnist_data(train=True)
+        train_data = utils.dataLoader.load_imagenet(root=self.dataset_path, train=True)
         self.dataset_num = train_data.__len__()
         # split the dataset into training and validation sets.
         train_size = int(self.train_size * self.dataset_num)
