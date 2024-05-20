@@ -1,4 +1,6 @@
 import os
+import time
+
 import torch
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
@@ -14,9 +16,12 @@ from network.exampleNet import Net
 
 from torchinfo import summary
 from tqdm import tqdm
+<<<<<<< HEAD
+=======
 
 from PIL import Image
 import numpy as np
+>>>>>>> 4d7e6e4df1653ef9397f107d432d469b503c9466
 
 
 def check_model_build(args):
@@ -191,7 +196,7 @@ class DeepNetwork():
         valid_progress = tqdm(total=len(eval_loader), desc="Valid || iteration : ")
 
         with torch.no_grad():
-            for images, labels in eval_loader:
+            for images, labels in tqdm(eval_loader):
                 images = images.to(device)
                 labels = labels.to(device)
                 outputs = self.network(images)
@@ -220,7 +225,6 @@ class DeepNetwork():
         print("Dataset number : ", self.dataset_num)
         print("Training set ratio : ", self.train_size)
         print("Each batch size : ", self.batch_size)
-        print("Global batch size : ", self.global_batch_size)
         print("Target image size : ", self.img_size)
         # print("Save frequency : ", self.save_freq)
         print("PyTorch Version :", torch.__version__)
@@ -233,10 +237,17 @@ class DeepNetwork():
         best_loss = float("inf")
         # number of self.dataset_iter
         iter_per_epoch = max(int(self.dataset_num * self.train_size // self.batch_size), 1)
+<<<<<<< HEAD
+        print(f"iter_per_epoch: {iter_per_epoch}")
+        epoch = 0
+        current_progress = 0
+        progress = tqdm(total=iter_per_epoch, desc="Iteration per epoch")
+=======
         print(f"iter_per_epoch {iter_per_epoch}")
         epoch = 0
         current_progress = 0
         progress = tqdm(desc="Iteration : ", total=iter_per_epoch)
+>>>>>>> 4d7e6e4df1653ef9397f107d432d469b503c9466
         for idx in range(self.start_iteration, self.iteration):
 
             if idx == 0:
@@ -265,6 +276,7 @@ class DeepNetwork():
 
                     loss = 0
                     train_loss_list = []
+                    progress.reset(iter_per_epoch)
 
                 self.trainning_set_iter = iter(self.train_loader)
                 progress.reset(iter_per_epoch)
@@ -278,8 +290,17 @@ class DeepNetwork():
             train_loss_list.append(loss)
             train_summary_writer.add_scalar('loss', loss, global_step=idx)
 
+<<<<<<< HEAD
+            time.sleep(0.1)
+
+            # update progress
             current_progress += 1
             progress.update(1)
+
+=======
+            current_progress += 1
+            progress.update(1)
+>>>>>>> 4d7e6e4df1653ef9397f107d432d469b503c9466
         print("=======================================")
         progress.close()
 
