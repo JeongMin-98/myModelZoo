@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument('--phase', type=str, default='train', help='train or test')
     parser.add_argument('--iteration', type=int, default=10000)
     parser.add_argument('--img_size', type=int, default=28, help='The size of image')
-    parser.add_argument('--batch_size', type=int, default=128, help='The size of batch size')
+    parser.add_argument('--batch_size', type=int, default=200, help='The size of batch size')
     parser.add_argument('--feature_size', type=int, default=64, help='The size of feature size')
     parser.add_argument('--train_size', type=float, default=0.8,
                         help='The size of train_size (When splitting dataset into train and val sets)')

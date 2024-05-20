@@ -16,6 +16,12 @@ from network.exampleNet import Net
 
 from torchinfo import summary
 from tqdm import tqdm
+<<<<<<< HEAD
+=======
+
+from PIL import Image
+import numpy as np
+>>>>>>> 4d7e6e4df1653ef9397f107d432d469b503c9466
 
 
 def check_model_build(args):
@@ -136,7 +142,8 @@ class DeepNetwork():
         self.network = Net(config=self.cfg).to(device)
 
         """ Optimizer """
-        self.optim = torch.optim.Adam(self.network.parameters(), lr=self.lr)
+        self.optim = torch.optim.SGD(self.network.parameters(), momentum=0.9, lr=self.lr)
+        # self.optim = torch.optim.Adam(self.network.parameters(), lr=self.lr)
         """ Checkpoint """
         latest_ckpt_name, start_iter = find_latest_ckpt(self.checkpoint_dir)
 
@@ -186,6 +193,8 @@ class DeepNetwork():
         correct = 0
         total = 0
 
+        valid_progress = tqdm(total=len(eval_loader), desc="Valid || iteration : ")
+
         with torch.no_grad():
             for images, labels in tqdm(eval_loader):
                 images = images.to(device)
@@ -197,10 +206,11 @@ class DeepNetwork():
 
                 images = images.cpu().numpy()
                 predicted = predicted.cpu().numpy()
+                valid_progress.update(1)
 
                 if valid is False:
                     utils.tools.visualize_inference(images, predicted, batch_size=self.batch_size)
-
+        valid_progress.close()
         acc = 100 * correct / total
         print() if valid else print(self.acc_log_template.format(1, 1, acc))
         return acc
@@ -227,10 +237,17 @@ class DeepNetwork():
         best_loss = float("inf")
         # number of self.dataset_iter
         iter_per_epoch = max(int(self.dataset_num * self.train_size // self.batch_size), 1)
+<<<<<<< HEAD
         print(f"iter_per_epoch: {iter_per_epoch}")
         epoch = 0
         current_progress = 0
         progress = tqdm(total=iter_per_epoch, desc="Iteration per epoch")
+=======
+        print(f"iter_per_epoch {iter_per_epoch}")
+        epoch = 0
+        current_progress = 0
+        progress = tqdm(desc="Iteration : ", total=iter_per_epoch)
+>>>>>>> 4d7e6e4df1653ef9397f107d432d469b503c9466
         for idx in range(self.start_iteration, self.iteration):
 
             if idx == 0:
@@ -262,6 +279,7 @@ class DeepNetwork():
                     progress.reset(iter_per_epoch)
 
                 self.trainning_set_iter = iter(self.train_loader)
+                progress.reset(iter_per_epoch)
 
             real_img, label = next(self.trainning_set_iter)
             real_img = real_img.to(device)
@@ -272,13 +290,19 @@ class DeepNetwork():
             train_loss_list.append(loss)
             train_summary_writer.add_scalar('loss', loss, global_step=idx)
 
+<<<<<<< HEAD
             time.sleep(0.1)
 
             # update progress
             current_progress += 1
             progress.update(1)
 
+=======
+            current_progress += 1
+            progress.update(1)
+>>>>>>> 4d7e6e4df1653ef9397f107d432d469b503c9466
         print("=======================================")
+        progress.close()
 
     def torch_save(self, idx):
         print()
